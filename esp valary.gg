@@ -1,13 +1,31 @@
--- Valary ESP Module (Standalone)
--- Extracted from South Bronx Emulated script
--- Usage: load this, then control via getgenv().Esp and the Options metatable
+-- Valary ESP Module (Standalone + All Enabled)
+-- Fixed: LPH stubs + auto-enable all features
+
+if getgenv().Esp then
+    pcall(function() getgenv().Esp.Unload() end)
+end
+
+-- LPH Stubs
+if LPH_OBFUSCATED == nil then
+    LPH_ENCNUM = function(toEncrypt) return toEncrypt end
+    LPH_NUMENC = LPH_ENCNUM
+    LPH_ENCSTR = function(toEncrypt) return toEncrypt end
+    LPH_STRENC = LPH_ENCSTR
+    LPH_ENCFUNC = function(toEncrypt) return toEncrypt end
+    LPH_FUNCENC = LPH_ENCFUNC
+    LPH_JIT = function(f) return f end
+    LPH_JIT_MAX = LPH_JIT
+    LPH_NO_VIRTUALIZE = function(f) return f end
+    LPH_NO_UPVALUES = function(f) return f end
+    LPH_CRASH = function() end
+end
 
 local ESPFonts = { }
 local SelectedESPFont
 
 local Options, MiscOptions do
     if getgenv().Esp then 
-        getgenv().Esp.Unload()
+        pcall(function() getgenv().Esp.Unload() end)
     end 
 
     local function safe_cloneref(obj)
@@ -187,8 +205,8 @@ local Options, MiscOptions do
 
     getgenv().Esp = { 
         Players = {}, 
-        ScreenGui = Instance.new("ScreenGui", gethui()), 
-        Cache = Instance.new("ScreenGui", gethui()), 
+        ScreenGui = Instance.new("ScreenGui", (typeof(gethui)=="function" and gethui() or game:GetService("CoreGui"))), 
+        Cache = Instance.new("ScreenGui", (typeof(gethui)=="function" and gethui() or game:GetService("CoreGui"))), 
         Connections = {}, 
     }; do 
         Esp.ScreenGui.IgnoreGuiInset = true
@@ -1753,11 +1771,54 @@ local Options, MiscOptions do
     for index,value in MiscOptions do 
         Options[index] = value -- gotta trigger that new index
     end
+
+    -- Expose for external control
+    getgenv().EspOptions = Options
+    getgenv().EspMiscOptions = MiscOptions
 end
 
--- Options and MiscOptions are local to the do-block above.
--- Control ESP through getgenv().Esp and by setting values on the Options metatable
--- (the script already assigns getgenv().Esp inside the block).
--- Example after loading:
---   getgenv().Esp  -- main ESP object
---   To toggle features you normally use the Options table that triggers RefreshElements.
+
+-- ============================================================
+-- AUTO-ENABLE ALL ESP FEATURES
+-- ============================================================
+task.defer(function()
+    local Options = getgenv().EspOptions
+    local MiscOptions = getgenv().EspMiscOptions
+
+    if not Options or not MiscOptions then
+        warn("[Valary ESP] Options no encontradas")
+        return
+    end
+
+    local function Enable(key, value)
+        MiscOptions[key] = value
+        Options[key] = value
+    end
+
+    -- Master
+    Enable("Enabled", true)
+    Enable("Render_Distance", 2000)
+
+    -- Boxes
+    Enable("Boxes", true)
+    Enable("BoxType", "Corner")
+    Enable("Box Fill", false)
+
+    -- Healthbar
+    Enable("Healthbar", true)
+    Enable("Healthbar_Number", true)
+    Enable("Healthbar_Position", "Left")
+    Enable("Healthbar_Animations", true)
+    Enable("Healthbar_Tween", true)
+
+    -- Ammobar OFF (barra azul de la derecha)
+    Enable("Ammobar", false)
+    Enable("Ammobar_Number", false)
+
+    -- Texts
+    Enable("Name_Text", true)
+    Enable("Distance_Text", true)
+    Enable("Weapon_Text", true)
+
+    print("[Valary ESP] Cargado y TODO activado ✔")
+end)
