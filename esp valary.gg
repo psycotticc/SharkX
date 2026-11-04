@@ -1,5 +1,5 @@
--- Valary ESP Module (Standalone + All Enabled)
--- Fixed: LPH stubs + auto-enable all features
+-- Valary ESP Module (Standalone)
+-- Defaults OFF - activate only from GUI
 
 if getgenv().Esp then
     pcall(function() getgenv().Esp.Unload() end)
@@ -333,7 +333,8 @@ local Options, MiscOptions do
                         BorderColor3 = rgb(0, 0, 0);
                         Size = dim2(0, 211, 0, 240);
                         BorderSizePixel = 0;
-                        BackgroundColor3 = rgb(255, 255, 255)
+                        BackgroundColor3 = rgb(255, 255, 255);
+                        Visible = false; -- OFF by default
                     });
 
                     Items.HolderGradient = Esp:Create( "UIGradient" , {
@@ -1340,6 +1341,17 @@ local Options, MiscOptions do
             end 
 
             if Options.Enabled == false then
+                -- keep everything hidden while master is off
+                for _, Data in Esp.Players do
+                    if Data.Items and Data.Items.Holder then
+                        Data.Items.Holder.Visible = false
+                    end
+                    if Data.Drawings then
+                        for _, line in pairs(Data.Drawings) do
+                            line.Visible = false
+                        end
+                    end
+                end
                 return 
             end 
 
@@ -1851,4 +1863,40 @@ local Options, MiscOptions do
     -- Expose for external control
     getgenv().EspOptions = Options
     getgenv().EspMiscOptions = MiscOptions
+    getgenv().ESPFonts = ESPFonts
+
+    -- Force everything OFF on load (GUI will enable features)
+    MiscOptions["Enabled"] = false
+    Options["Enabled"] = false
+    MiscOptions["Boxes"] = false
+    Options["Boxes"] = false
+    MiscOptions["Box Fill"] = false
+    Options["Box Fill"] = false
+    MiscOptions["Healthbar"] = false
+    Options["Healthbar"] = false
+    MiscOptions["Healthbar_Number"] = false
+    Options["Healthbar_Number"] = false
+    MiscOptions["Ammobar"] = false
+    Options["Ammobar"] = false
+    MiscOptions["Ammobar_Number"] = false
+    Options["Ammobar_Number"] = false
+    MiscOptions["Name_Text"] = false
+    Options["Name_Text"] = false
+    MiscOptions["Distance_Text"] = false
+    Options["Distance_Text"] = false
+    MiscOptions["Weapon_Text"] = false
+    Options["Weapon_Text"] = false
+    MiscOptions["Skeleton"] = false
+    Options["Skeleton"] = false
+
+    for _, Data in pairs(Esp.Players) do
+        if Data.Items and Data.Items.Holder then
+            Data.Items.Holder.Visible = false
+        end
+        if Data.Drawings then
+            for _, line in pairs(Data.Drawings) do
+                line.Visible = false
+            end
+        end
+    end
 end
