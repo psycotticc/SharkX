@@ -157,6 +157,12 @@ local Options, MiscOptions do
         ["Weapon_Text_Position"] = "Bottom";
         ["Weapon_Text_Font"] = "Verdana";
         ["Weapon_Text_Size"] = 11;
+
+        -- Skeleton
+        ["Skeleton"] = false;
+        ["Skeleton_Color"] = { Color = rgb(255, 255, 255) };
+        ["Skeleton_Thickness"] = 1.5;
+        ["Skeleton_Transparency"] = 1;
     };  
 
     Options = setmetatable({}, {__index = MiscOptions, __newindex = function(self, key, value) Esp.RefreshElements(key, value) end});
@@ -291,7 +297,25 @@ local Options, MiscOptions do
                 Drawings = { }, 
                 Type = typechar or "player";
                 Connections = {};
-            } 
+            }
+
+            -- Skeleton lines (Drawing API)
+            do
+                local ok, _ = pcall(function() return Drawing.new end)
+                if ok and Drawing and Drawing.new then
+                    for i, bone in ipairs(Bones) do
+                        local line = Drawing.new("Line")
+                        line.Visible = false
+                        line.From = Vector2.new(0, 0)
+                        line.To = Vector2.new(0, 0)
+                        line.Color = Color3.fromRGB(255, 255, 255)
+                        line.Thickness = 1.5
+                        line.Transparency = 1
+                        line.ZIndex = 2
+                        Data.Drawings[i] = line
+                    end
+                end
+            end 
 
             function Data:Connection(signal, callback)
                 local conn = signal:Connect(callback)
@@ -1210,6 +1234,15 @@ local Options, MiscOptions do
                     Esp.Players[player] = nil
                 end
 
+                if self.Drawings then
+                    for _, line in pairs(self.Drawings) do
+                        pcall(function()
+                            line.Visible = false
+                            line:Remove()
+                        end)
+                    end
+                end
+
                 self.Info = nil
                 self.Items = nil
                 self.Drawings = nil
@@ -1345,11 +1378,21 @@ local Options, MiscOptions do
                 end 
 
                 if not OnScreen then
+                    if Data.Drawings then
+                        for _, line in pairs(Data.Drawings) do
+                            line.Visible = false
+                        end
+                    end
                     continue
                 end 
 
                 if Distance > MiscOptions["Render_Distance"] and Holder.Visible then 
                     Holder.Visible = false 
+                    if Data.Drawings then
+                        for _, line in pairs(Data.Drawings) do
+                            line.Visible = false
+                        end
+                    end
                     continue 
                 end 
 
@@ -1368,6 +1411,39 @@ local Options, MiscOptions do
                 if DistanceLabel.Text ~= Text then 
                     DistanceLabel.Text = Text
                 end 
+
+                -- Skeleton ESP
+                if Data.Drawings and MiscOptions["Skeleton"] then
+                    local skColor = (MiscOptions["Skeleton_Color"] and MiscOptions["Skeleton_Color"].Color) or Color3.fromRGB(255,255,255)
+                    local skThick = MiscOptions["Skeleton_Thickness"] or 1.5
+                    local skTrans = MiscOptions["Skeleton_Transparency"] or 1
+                    for i, bone in ipairs(Bones) do
+                        local line = Data.Drawings[i]
+                        if not line then continue end
+                        local p1 = Character:FindFirstChild(bone[1])
+                        local p2 = Character:FindFirstChild(bone[2])
+                        if p1 and p2 then
+                            local a, onA = camera:WorldToViewportPoint(p1.Position)
+                            local b, onB = camera:WorldToViewportPoint(p2.Position)
+                            if onA and onB and a.Z > 0 and b.Z > 0 then
+                                line.From = Vector2.new(a.X, a.Y)
+                                line.To = Vector2.new(b.X, b.Y)
+                                line.Color = skColor
+                                line.Thickness = skThick
+                                line.Transparency = skTrans
+                                line.Visible = true
+                            else
+                                line.Visible = false
+                            end
+                        else
+                            line.Visible = false
+                        end
+                    end
+                elseif Data.Drawings then
+                    for _, line in pairs(Data.Drawings) do
+                        line.Visible = false
+                    end
+                end
                 
                 -- if Options["Box Fill"] and Options["Box Spin"] then 
                 --     Items["Holder_gradient"].Rotation += Options["Box Spin Speed"] / 100
@@ -1811,9 +1887,15 @@ task.defer(function()
     Enable("Healthbar_Animations", true)
     Enable("Healthbar_Tween", true)
 
-    -- Ammobar OFF (barra azul de la derecha)
+    -- Ammobar OFF
     Enable("Ammobar", false)
     Enable("Ammobar_Number", false)
+
+    -- Skeleton ESP
+    Enable("Skeleton", true)
+    Enable("Skeleton_Color", { Color = Color3.fromRGB(255, 255, 255) })
+    Enable("Skeleton_Thickness", 1.5)
+    Enable("Skeleton_Transparency", 1)
 
     -- Texts
     Enable("Name_Text", true)
