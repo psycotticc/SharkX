@@ -59882,11 +59882,8 @@ end
 return ig.c
 end
 end
-do -- iH
-local function fn35() tbl17 .aE();return function(l)local I=l:AddGroup({Source=l:AddToggle({Label="Follow Target",Tooltip="Drags the crosshair toward the aimbot / silent aim target",Config={"CustomCrosshair","FollowTarget","Enabled"}})});I:AddDropdown({Label="Follow Target Mode",Options={"Crosshair","Crosshair + Text"},Config={"CustomCrosshair","FollowTarget","Mode"}});I:AddSlider({Label="Follow Speed",Default=20,Min=1,Max=50,Config={"CustomCrosshair","FollowTarget","Speed"}});I:AddSlider({Label="Follow Damper",Default=1,Min=0,Max=30,Config={"CustomCrosshair","FollowTarget","Damper"}});I:AddSlider({Label="Snap Distance",Default=5,Min=0,Max=10,Config={"CustomCrosshair","FollowTarget","SnapDistance"}});end;end
-
-tbl17.iH = function()
-local ih = tbl17.cache.iH
+do -- ih
+local function fn35() tbl17 .aE();local I= tbl17 .h6();local function l(W)I(W,"Enable Ragebot",{"Always","Toggle","Hold"},{"Ragebot"},true);W:AddToggle({Label="Prioritize Hackers",Config={"Ragebot","PrioritizeHackers"}});W:AddSlider({Label="Stability",Min=0,Max=1.5,Step=0.001,Config={"Ragebot","Stability"}});W:AddSlider({Label="Shoot Frames",Min=1,Max=5,Config={"Ragebot","ShootFrames"}});end;local function I(W)local N={"Primary","Secondary","Melee"};for P,P in N,nil,nil do W:AddToggle({Label=string.format("%s Enabled",tostring(P)),Config={"Ragebot","Weapons","Enabled",P}});end;W:AddOrderedList({Label="Weapon Priority",Items=N,Default=N,Config={"Ragebot","Weapons","Priority"}});W:AddDropdown({Label="On Empty",Options={"Reload","Swap","SwapOrReload"},Labels={SwapOrReload="Swap or Reload"},Config={"Ragebot","Weapons","OnEmpty"}});end;local function W(N,P)local a=N:AddGroup({Source=P,Option="ProjectileBreaker"});a:AddRangeSlider({Label="Forward Depth",Min=0,Max=10,Step=0.1,Config={"Ragebot","Evasion","ProjectileBreaker","DepthForward"}});a:AddSlider({Label="Forward Frequency",Min=0,Max=20,Step=0.1,Config={"Ragebot","Evasion","ProjectileBreaker","DepthForwardFrequency"}});a:AddRangeSlider({Label="Upward Depth",Min=0,Max=10,Step=0.1,Config={"Ragebot","Evasion","ProjectileBreaker","DepthUp"}});a:AddSlider({Label="Upward Frequency",Min=0,Max=20,Step=0.1,Config={"Ragebot","Evasion","ProjectileBreaker","DepthUpFrequency"}});a:AddSlider({Label="Reposition Interval (s)",Min=0.05,Max=2,Step=0.01,Config={"Ragebot","Evasion","ProjectileBreaker","RepositionInterval"}});a:AddToggle({Label="Fallback Character Origin",Config={"Ragebot","Evasion","ProjectileBreaker","FallbackAnchorFromCharacter"}});a:AddSlider({Label="Fallback Radius",Min=5,Max=100000000,Config={"Ragebot","Evasion","ProjectileBreaker","FallbackBaseRadius"}});a:AddSlider({Label="Fallback Random Factor",Min=0,Max=1,Step=0.1,Config={"Ragebot","Evasion","ProjectileBreaker","FallbackRadiusRandomFactor"}});end;local function N(P)local a=P:AddDropdown({Label="Evasion Mode",Options={"Off","Random","Translocate","ProjectileBreaker","BehindPerson"},Labels={ProjectileBreaker="Projectile Breaker",BehindPerson="Behind the Person"},Config={"Ragebot","Evasion","Mode"}});local e=P:AddGroup({Source=a,Option="Random"});e:AddToggle({Label="Character Origin",Config={"Ragebot","Evasion","Random","AnchorFromCharacter"}});e:AddSlider({Label="Base Radius",Min=5,Max=100000000,Config={"Ragebot","Evasion","Random","BaseRadius"}});e:AddSlider({Label="Random Factor",Min=0,Max=1,Step=0.1,Config={"Ragebot","Evasion","Random","RadiusRandomFactor"}});P:AddGroup({Source=a,Option="Translocate"}):AddSlider({Label="Offset",Min=-5,Max=5,Step=0.1,Config={"Ragebot","Evasion","Translocate","Offset"}});local bp = P:AddGroup({Source=a,Option="BehindPerson"});bp:AddSlider({Label="Behind Distance",Min=5,Max=50,Step=1,Config={"Ragebot","Evasion","BehindPerson","BehindDistance"}});bp:AddSlider({Label="Approach Distance",Min=1,Max=15,Step=0.5,Config={"Ragebot","Evasion","BehindPerson","ApproachDistance"}});bp:AddSlider({Label="Facing Threshold",Min=0,Max=1,Step=0.05,Config={"Ragebot","Evasion","BehindPerson","FacingThreshold"}});bp:AddSlider({Label="Max Wait Time (s)",Min=0,Max=30,Step=0.5,Config={"Ragebot","Evasion","BehindPerson","MaxWaitTime"}});bp:AddSlider({Label="Approach Time (s)",Min=0.1,Max=3,Step=0.1,Config={"Ragebot","Evasion","BehindPerson","ApproachTime"}});W(P,a);end;return function(W)l(W:AddSection({Title="Activation",Side="left"}));I(W:AddSection({Title="Weapon Strategy",Side="left"}));N(W:AddSection({Title="Evasion",Side="right"}));end;end
 
 if not ih then
 local ih2 = { c = fn35() }
@@ -63210,6 +63207,7 @@ _spatialLimitGate = v130,
 _hitscanStrategy = v117.new(arg5),
 _meleeStrategy = v119.new(arg5),
 _projectileBreakerTeleport = ragebot:Add(v120.new(arg, arg3)),
+_behindPerson = ragebot:Add(tbl17.jX().new()),
 _stateHook = arg4,
 _reloadGun = nil,
 _reloadReadyAt = nil,
@@ -63304,10 +63302,11 @@ arg:_ApplyForcedCrouch(v131.ShouldForceCrouch == true)
 local v132 = innerContext.ItemBehaviors:EquippedItemAsGun()
 local ammo = v132 ~= nil and v132:GetAmmo() or 0
 local shotRequestCount = v132 ~= nil and v132.ShotRequestCount or 0
+
 local weaponAction = v131.WeaponAction
 
-if weaponAction ~= nil then
-weaponAction()
+if weaponAction ~= nil and not v131.SuppressFire then
+    weaponAction()
 
 if v132 ~= nil and (v132 ~= nil and v132.ShotRequestCount - shotRequestCount or 0) > 0 and v132:GetExpectedAmmoAfterPendingShots() <= 0 then
 innerContext.CharacterController:SetServerCFrame(v127.getImmune())
@@ -63458,14 +63457,25 @@ return fn36()
 end
 
 index2._EvadePlan = function(arg, arg2, arg3)
-if arg3 == "Off" then
-return {}
-end
+    if arg3 == "Off" then
+        return {}
+    end
 
-if arg3 == "ProjectileBreaker" then
-return { CFrame = arg._projectileBreakerTeleport:Compute(arg2), ShouldSkipDefense = v86[34] }
-end
-return { CFrame = v121.compute(arg2) }
+    if arg3 == "ProjectileBreaker" then
+        return { CFrame = arg._projectileBreakerTeleport:Compute(arg2), ShouldSkipDefense = v86[34] }
+    end
+
+    if arg3 == "BehindPerson" then
+        local target = arg._targetSelection:GetTarget()
+        local cf = arg._behindPerson:Compute(arg2, target)
+        return {
+            CFrame = cf,
+            ShouldSkipDefense = true,
+            SuppressFire = not arg._behindPerson:ShouldFire(),
+        }
+    end
+
+    return { CFrame = v121.compute(arg2) }
 end
 
 index2._ApplyPlan = function(arg, arg2, arg3, arg4)
@@ -63509,6 +63519,7 @@ arg._lastDefensiveViewAngles = nil
 arg:_ApplyForcedCrouch(false)
 arg._meleeStrategy:ResetState()
 arg._projectileBreakerTeleport:ResetState()
+arg._behindPerson:Reset()
 local innerContext = arg._innerContext
 if innerContext == nil then
 return
